@@ -9,7 +9,7 @@ import java.util.Date;
  * @author Tianying Peng
  * @date 2018-12-24 21:32
  */
-public class HydrologicalInformation {
+public class HydrologicalInfo {
 
     /**
      * id
