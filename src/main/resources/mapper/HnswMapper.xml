@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.typeng.hydrology.mapper.HnswMapper">
+
+    <resultMap id="HydrologicalInfo" type="com.typeng.hydrology.model.HydrologicalInfo">
+        <!--<id property="taskId" column="TASK_ID" />-->
+        <!--<result property="taskName" column="TASK_NAME" />-->
+
+    </resultMap>
+
+    <select id="" resultMap="">
+
+    </select>
+
+</mapper>

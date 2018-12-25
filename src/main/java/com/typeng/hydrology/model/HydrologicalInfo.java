@@ -1,7 +1,7 @@
 package com.typeng.hydrology.model;
 
-import java.sql.Time;
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 /**
  * 水文信息.
@@ -30,11 +30,11 @@ public class HydrologicalInfo {
     /**
      * 查询日期（时间）
      */
-    private Date date;
+    private LocalDate date;
     /**
      * 测量时间
      */
-    private Time time;
+    private LocalTime time;
     /**
      * 水位
      */
@@ -58,7 +58,7 @@ public class HydrologicalInfo {
     /**
      * 最高水位发生日期
      */
-    private Date dateOfHighest;
+    private LocalDate dateOfHighest;
     /**
      * 所属地区
      */
@@ -104,19 +104,19 @@ public class HydrologicalInfo {
         this.stationName = stationName;
     }
 
-    public Date getDate() {
+    public LocalDate getDate() {
         return date;
     }
 
-    public void setDate(Date date) {
+    public void setDate(LocalDate date) {
         this.date = date;
     }
 
-    public Time getTime() {
+    public LocalTime getTime() {
         return time;
     }
 
-    public void setTime(Time time) {
+    public void setTime(LocalTime time) {
         this.time = time;
     }
 
@@ -160,11 +160,11 @@ public class HydrologicalInfo {
         this.highestWaterLevel = highestWaterLevel;
     }
 
-    public Date getDateOfHighest() {
+    public LocalDate getDateOfHighest() {
         return dateOfHighest;
     }
 
-    public void setDateOfHighest(Date dateOfHighest) {
+    public void setDateOfHighest(LocalDate dateOfHighest) {
         this.dateOfHighest = dateOfHighest;
     }
 
