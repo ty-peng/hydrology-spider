@@ -4,7 +4,6 @@ import com.typeng.hydrology.enums.RiverBasinEnum;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.List;
 
 /**
  * 用于构造爬虫对象.
@@ -42,10 +41,31 @@ public class SpiderObject {
      * 时间点
      */
     private LocalTime[] times;
-    /**
-     * 结果列表（一般不需要用到直接存入数据库）
-     */
-    private List<HydrologicalInfo> resultList;
+
+    public SpiderObject() {
+    }
+
+    public SpiderObject(String url, RiverBasinEnum[] riverBasins, String[] stationNames, LocalDate startDate) {
+        this.url = url;
+        this.riverBasins = riverBasins;
+        this.stationNames = stationNames;
+        this.startDate = startDate;
+    }
+
+    public SpiderObject(String url, String[] stationNames, LocalDate startDate) {
+        this.url = url;
+        this.stationNames = stationNames;
+        this.startDate = startDate;
+    }
+
+    public SpiderObject(String url, RiverBasinEnum[] riverBasins, String[] stationNames, LocalDate startDate, LocalDate endDate, LocalTime[] times) {
+        this.url = url;
+        this.riverBasins = riverBasins;
+        this.stationNames = stationNames;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.times = times;
+    }
 
     public String getUrl() {
         return url;
@@ -103,11 +123,4 @@ public class SpiderObject {
         this.times = times;
     }
 
-    public List<HydrologicalInfo> getResultList() {
-        return resultList;
-    }
-
-    public void setResultList(List<HydrologicalInfo> resultList) {
-        this.resultList = resultList;
-    }
 }
