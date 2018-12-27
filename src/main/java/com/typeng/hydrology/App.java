@@ -32,7 +32,6 @@ public class App {
 
         for (int i = 0; i < threads; i++) {
             pool.execute(new Spider(app.toSpider(2, start, end)));
-//            pool.execute(new Spider(app.toSpider(2, start, end)));
             start = end.plusDays(1);
             if (start.plusDays(intervalDays).isAfter(LocalDate.now())) {
                 end = LocalDate.now();
@@ -43,9 +42,6 @@ public class App {
         }
 
         pool.shutdown();
-        /*
-        pool1.shutdown();
-        pool2.shutdown();*/
     }
 
     public SpiderObject toSpider(int type, LocalDate startDate, LocalDate endDate) throws Exception {
@@ -60,7 +56,7 @@ public class App {
             spiderObject = new SpiderObject(url, riverBasins ,stationNames, startDate);
         } else if (2 == type) {
             url = "http://61.187.56.156/wap/zykz_BB2.asp";
-            String[] temp = {"沙道观", "弥陀寺", "藕池(康)", "藕池(管)", "石门", "桃源", "桃江"};
+            String[] temp = {"沙道观", "弥陀寺", "藕池(康)", "藕池(管)", "石门", "桃源", "桃江", "湘潭", "城陵矶"};
             stationNames = temp;
             spiderObject = new SpiderObject(url, stationNames, startDate);
         } else {

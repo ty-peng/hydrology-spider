@@ -3,8 +3,6 @@ package com.typeng.hydrology.dao.impl;
 import com.typeng.hydrology.dao.HnswDao;
 import com.typeng.hydrology.model.HydrologicalInfo;
 import com.typeng.hydrology.model.qo.HydrologicalInfoQo;
-import com.typeng.hydrology.utils.C3P0Utils;
-import com.typeng.hydrology.utils.DBConnection;
 import org.apache.commons.dbutils.QueryRunner;
 
 import java.sql.Connection;
