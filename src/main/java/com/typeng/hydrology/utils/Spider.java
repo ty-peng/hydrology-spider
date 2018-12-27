@@ -1,6 +1,7 @@
 package com.typeng.hydrology.utils;
 
 import com.typeng.hydrology.dao.HnswDao;
+import com.typeng.hydrology.dao.impl.HnswDaoImpl;
 import com.typeng.hydrology.enums.RiverBasinEnum;
 import com.typeng.hydrology.model.HydrologicalInfo;
 import com.typeng.hydrology.model.SpiderObject;
@@ -10,6 +11,8 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -24,8 +27,8 @@ import java.util.List;
 public class Spider implements Runnable {
 
     private SpiderObject spiderObject;
-    private List<HydrologicalInfo> hydrologicalInfoList = new ArrayList<>();
-    private HnswDao hnswDao;
+    private List<HydrologicalInfo> hydrologicalInfoList;
+    private HnswDaoImpl hnswDao;
 
     public Spider(SpiderObject spiderObject) {
         this.spiderObject = spiderObject;
@@ -65,20 +68,22 @@ public class Spider implements Runnable {
      *
      * @param theUrl run()方法里fullUrl的引用
      */
-    private void doSpider(StringBuffer theUrl) {
+    private void doSpider(StringBuffer theUrl) throws SQLException {
+        Connection con = C3P0Utils.getConnection();
+        hnswDao = new HnswDaoImpl(con);
         StringBuffer fullUrl = new StringBuffer(theUrl);
         StringBuffer url;
         StringBuffer timeUrl;
         // 开始到截止日期迭代
         for (LocalDate date = spiderObject.getStartDate(); date.isBefore(spiderObject.getEndDate().plusDays(1)); date = date.plusDays(1)) {
-            url = new StringBuffer().append("&nian=").append(date.getYear())
+            url = new StringBuffer("&nian=").append(date.getYear())
                     .append("&yue=").append(date.getMonthValue())
                     .append("&ri=").append(date.getDayOfMonth());
             for (LocalTime time : spiderObject.getTimes()) {
-                timeUrl = new StringBuffer().append("&shi=").append(time.toString());
+                timeUrl = new StringBuffer("&shi=").append(time.toString());
                 // 解析页面获取数据
                 try {
-                    Document doc = Jsoup.connect(fullUrl.append(url).append(timeUrl).toString()).timeout(10000).get();
+                    Document doc = Jsoup.connect(fullUrl.append(url).append(timeUrl).toString()).timeout(20000).get();
                     // 选择元素
                     Elements trs = doc.select("table tr");
                     if (fullUrl.toString().contains("hnsq_BB2.asp")) {    // 全省页面
@@ -92,7 +97,9 @@ public class Spider implements Runnable {
                             HydrologicalInfo hydrologicalInfo = getAndFillData(tds, index);
                             if (null == hydrologicalInfo) continue;
                             hydrologicalInfo.setDate(date);
-                            hydrologicalInfoList.add(hydrologicalInfo);
+                            // hydrologicalInfoList.add(hydrologicalInfo);
+                            // 存入数据库
+                            hnswDao.insertHydrologicalInfo(hydrologicalInfo);
                         }
                     } else if (fullUrl.toString().contains("zykz_BB2.asp")) {   // 控制站页面
                         for (Element tr : trs) {
@@ -106,23 +113,25 @@ public class Spider implements Runnable {
                             HydrologicalInfo hydrologicalInfo = getAndFillData(tdps, index);
                             if (null == hydrologicalInfo) continue;
                             hydrologicalInfo.setDate(date);
-                            hydrologicalInfoList.add(hydrologicalInfo);
+                            // hydrologicalInfoList.add(hydrologicalInfo);
+                            // 存入数据库
+                            hnswDao.insertHydrologicalInfo(hydrologicalInfo);
                         }
                     }
                     fullUrl = new StringBuffer(theUrl);
-                    // TODO 存入数据库
-                    // HnswDao
+                    /*
                     for (HydrologicalInfo hydrologicalInfo : hydrologicalInfoList) {
                         System.out.println(hydrologicalInfo.getStationName() + hydrologicalInfo.getDate().toString());
                     }
-                    System.out.println(Thread.currentThread() + " over");
+                    */
+                    System.out.println(Thread.currentThread() + date.toString() + " over");
 
-                } catch (IOException e) {
+                } catch (IOException | SQLException e) {
                     e.printStackTrace();
                 }
             }
         }
-
+        con.close();
 
     }
 
@@ -137,20 +146,20 @@ public class Spider implements Runnable {
         // 获取数据
         // 无流域信息
         int i = 0;
-        String riverName = elems.eq(index[i++]).html().replace((char) 12288, ' ').trim();
-        String stationName = elems.eq(index[i++]).html().replace((char) 12288, ' ').trim();
-        String tempStr = elems.eq(index[i++]).html().replace((char) 12288, ' ').trim();
+        String riverName = elems.eq(index[i++]).text().replace((char) 12288, ' ').trim();
+        String stationName = elems.eq(index[i++]).text().replace((char) 12288, ' ').trim();
+        String tempStr = elems.eq(index[i++]).text().replace((char) 12288, ' ').trim();
         LocalTime checkTime = null;
         if (!isStrBlank(tempStr)) {
             checkTime = LocalTime.parse(tempStr);
         }
-        tempStr = elems.eq(index[i++]).html().replace((char) 12288, ' ').replace(",", "").trim();
+        tempStr = elems.eq(index[i++]).text().replace((char) 12288, ' ').replace(",", "").trim();
         Double waterLevel = null;
         if (!isStrBlank(tempStr)) {
             waterLevel = Double.parseDouble(tempStr);
         }
-        String fluctuation = elems.eq(index[i++]).html().replace((char) 12288, ' ').trim();
-        tempStr = elems.eq(index[i++]).html().replace((char) 12288, ' ').replace(",", "").trim();
+        String fluctuation = elems.eq(index[i++]).text().replace((char) 12288, ' ').trim();
+        tempStr = elems.eq(index[i++]).text().replace((char) 12288, ' ').replace(",", "").trim();
         Integer flow = null;
         if (!isStrBlank(tempStr)) {
             flow = Integer.parseInt(tempStr);

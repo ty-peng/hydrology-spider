@@ -3,6 +3,7 @@ package com.typeng.hydrology.dao;
 import com.typeng.hydrology.model.HydrologicalInfo;
 import com.typeng.hydrology.model.qo.HydrologicalInfoQo;
 
+import java.sql.SQLException;
 import java.util.List;
 
 /**
@@ -16,7 +17,7 @@ public interface HnswDao {
      * @param info
      * @return
      */
-    Integer insertHydrologicalInfo(HydrologicalInfo info);
+    Integer insertHydrologicalInfo(HydrologicalInfo info) throws SQLException;
 
     /**
      * 批量插入.
@@ -24,7 +25,7 @@ public interface HnswDao {
      * @param infos
      * @return
      */
-    Integer insertHydrologicalInfoBatch(List<HydrologicalInfo> infos);
+    void insertHydrologicalInfoBatch(List<HydrologicalInfo> infos) throws SQLException;
 
     /**
      * 条件查询水文信息记录.
@@ -32,5 +33,5 @@ public interface HnswDao {
      * @param qo
      * @return
      */
-    List<HydrologicalInfo> getHydrologicalInfoList(HydrologicalInfoQo qo);
+    List<HydrologicalInfo> getHydrologicalInfoList(HydrologicalInfoQo qo) throws SQLException;
 }
