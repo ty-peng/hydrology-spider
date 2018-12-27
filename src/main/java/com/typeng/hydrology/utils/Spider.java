@@ -163,6 +163,11 @@ public class Spider implements Runnable {
         hydrologicalInfo.setWaterLevel(waterLevel);
         hydrologicalInfo.setFluctuation(fluctuation);
         hydrologicalInfo.setFlow(flow);
+        // 未指定站名
+        if (null == spiderObject.getStationNames() || spiderObject.getStationNames().length < 1) {
+            return hydrologicalInfo;
+        }
+        // 指定站名
         for (String name : spiderObject.getStationNames()) {
             if (hydrologicalInfo.getStationName().equals(name)) {
                 return hydrologicalInfo;
