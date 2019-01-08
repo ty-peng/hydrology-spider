@@ -19,16 +19,21 @@ public class App {
     public static void main(String[] args) throws Exception {
 
         App app = new App();
-        final int threads = 8;
+        int threads = 8;
 
-        LocalDate startDate = LocalDate.of(1992, 1, 1);
+        LocalDate startDate = LocalDate.of(2019, 1, 5);
         LocalDate endDate = LocalDate.now();
-        ExecutorService pool = Executors.newFixedThreadPool(threads);
+
 
         long days = endDate.toEpochDay() - startDate.toEpochDay();
         long intervalDays = days / threads;
         LocalDate start = startDate;
         LocalDate end = start.plusDays(intervalDays);
+
+        if (days < threads) {
+            threads = (int) days;
+        }
+        ExecutorService pool = Executors.newFixedThreadPool(threads);
 
         for (int i = 0; i < threads; i++) {
             pool.execute(new Spider(app.toSpider(2, start, end)));
@@ -53,12 +58,12 @@ public class App {
             RiverBasinEnum[] riverBasins = {RiverBasinEnum.DONG_TING_HU};
             String[] temp = {"新江口"};
             stationNames = temp;
-            spiderObject = new SpiderObject(url, riverBasins ,stationNames, startDate);
+            spiderObject = new SpiderObject(url, riverBasins ,stationNames, startDate, endDate);
         } else if (2 == type) {
             url = "http://61.187.56.156/wap/zykz_BB2.asp";
             String[] temp = {"沙道观", "弥陀寺", "藕池(康)", "藕池(管)", "石门", "桃源", "桃江", "湘潭", "城陵矶"};
             stationNames = temp;
-            spiderObject = new SpiderObject(url, stationNames, startDate);
+            spiderObject = new SpiderObject(url, null, stationNames, startDate, endDate);
         } else {
             throw new Exception("爬取类型有误！");
         }

@@ -52,10 +52,12 @@ public class SpiderObject {
         this.startDate = startDate;
     }
 
-    public SpiderObject(String url, String[] stationNames, LocalDate startDate) {
+    public SpiderObject(String url, RiverBasinEnum[] riverBasins, String[] stationNames, LocalDate startDate, LocalDate endDate) {
         this.url = url;
+        this.riverBasins = riverBasins;
         this.stationNames = stationNames;
         this.startDate = startDate;
+        this.endDate = endDate;
     }
 
     public SpiderObject(String url, RiverBasinEnum[] riverBasins, String[] stationNames, LocalDate startDate, LocalDate endDate, LocalTime[] times) {
