@@ -1,22 +1,22 @@
 package com.typeng.hydrology.utils;
 
-import com.typeng.hydrology.dao.HnswDao;
-import com.typeng.hydrology.dao.impl.HnswDaoImpl;
 import com.typeng.hydrology.enums.RiverBasinEnum;
+import com.typeng.hydrology.mapper.HnswMapper;
 import com.typeng.hydrology.model.HydrologicalInfo;
 import com.typeng.hydrology.model.SpiderObject;
+import org.apache.ibatis.io.Resources;
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.SQLException;
+import java.io.Reader;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * 爬虫.
@@ -26,113 +26,113 @@ import java.util.List;
  */
 public class Spider implements Runnable {
 
+    // 应用唯一
+    private static SqlSessionFactory sqlSessionFactory;
+
+    static {
+        try {
+            Reader reader = Resources.getResourceAsReader("mybatis-config.xml");
+            sqlSessionFactory = new SqlSessionFactoryBuilder().build(reader);
+            reader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // 爬虫构建对象
     private SpiderObject spiderObject;
-    private List<HydrologicalInfo> hydrologicalInfoList;
-    private HnswDaoImpl hnswDao;
 
     public Spider(SpiderObject spiderObject) {
         this.spiderObject = spiderObject;
     }
 
     public void run() {
-        String baseUrl = spiderObject.getUrl() + "?printflag=1";
-        StringBuffer fullUrl;
-        StringBuffer basinsUrl;
-        // 是否选择流域（默认湘江）
-        // 带流域（全省查询）  不带流域（控制站查询）
-        if (null != spiderObject.getRiverBasins() && spiderObject.getRiverBasins().length > 0) {
-            for (RiverBasinEnum riverBasin : spiderObject.getRiverBasins()) {
-                int riverBasinKey = riverBasin.getKey();
-                fullUrl = new StringBuffer(baseUrl);
-                basinsUrl = new StringBuffer("&liuyu=").append(riverBasinKey);
-                try {
-                    doSpider(fullUrl.append(basinsUrl));
-                } catch (Exception e) {
-                    e.printStackTrace();
+        StringBuffer url = new StringBuffer(spiderObject.getUrl());
+        int index = url.length();
+        for (LocalDate date = spiderObject.getStartDate(); date.isBefore(spiderObject.getEndDate().plusDays(1)); date = date.plusDays(1)) {
+            for (LocalTime time : spiderObject.getTimes()) {
+                url.append("?printflag=1&nian=").append(date.getYear())
+                        .append("&yue=").append(date.getMonthValue())
+                        .append("&ri=").append(date.getDayOfMonth())
+                        .append("&shi=").append(time.toString());
+                // 是否选择流域, 带流域（全省查询（默认湘江））, 不带流域（控制站查询）
+                if (null != spiderObject.getRiverBasins() && spiderObject.getRiverBasins().length > 0) {
+                    // 不同流域一次接口只能查询一个
+                    for (RiverBasinEnum riverBasin : spiderObject.getRiverBasins()) {
+                        int basin = riverBasin.getKey();
+                        int index2 = url.length();
+                        url.append("&liuyu=").append(basin);
+                        try {
+                            doSpider(url.toString(), date);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        // 重置额外请求路径
+                        url.delete(index2, url.length());
+                    }
+                } else {
+                    try {
+                        doSpider(url.toString(), date);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
-            }
-        } else {
-            fullUrl = new StringBuffer(baseUrl);
-            try {
-                doSpider(fullUrl);
-            } catch (Exception e) {
-                e.printStackTrace();
+                // 重置请求路径
+                url.delete(index, url.length());
             }
         }
 
     }
 
-
     /**
-     * 爬虫解析获取数据.
+     * 爬取页面
      *
-     * @param theUrl run()方法里fullUrl的引用
+     * @param url
+     * @param date
      */
-    private void doSpider(StringBuffer theUrl) throws SQLException {
-        Connection con = C3P0Utils.getConnection();
-        hnswDao = new HnswDaoImpl(con);
-        StringBuffer fullUrl = new StringBuffer(theUrl);
-        StringBuffer url;
-        StringBuffer timeUrl;
-        // 开始到截止日期迭代
-        for (LocalDate date = spiderObject.getStartDate(); date.isBefore(spiderObject.getEndDate().plusDays(1)); date = date.plusDays(1)) {
-            url = new StringBuffer("&nian=").append(date.getYear())
-                    .append("&yue=").append(date.getMonthValue())
-                    .append("&ri=").append(date.getDayOfMonth());
-            for (LocalTime time : spiderObject.getTimes()) {
-                timeUrl = new StringBuffer("&shi=").append(time.toString());
-                // 解析页面获取数据
-                try {
-                    Document doc = Jsoup.connect(fullUrl.append(url).append(timeUrl).toString()).timeout(20000).get();
-                    // 选择元素
-                    Elements trs = doc.select("table tr");
-                    if (fullUrl.toString().contains("hnsq_BB2.asp")) {    // 全省页面
-                        // 遍历每一行
-                        for (Element tr : trs) {
-                            // 获取每一列
-                            Elements tds = tr.select("td");
-                            // 对应数据元素位置索引数组
-                            int[] index = {1, 2, 3, 4, 6, 7};
-                            // 获取填充
-                            HydrologicalInfo hydrologicalInfo = getAndFillData(tds, index);
-                            if (null == hydrologicalInfo) continue;
-                            hydrologicalInfo.setDate(date);
-                            // hydrologicalInfoList.add(hydrologicalInfo);
-                            // 存入数据库
-                            hnswDao.insertHydrologicalInfo(hydrologicalInfo);
-                        }
-                    } else if (fullUrl.toString().contains("zykz_BB2.asp")) {   // 控制站页面
-                        for (Element tr : trs) {
-                            // 跳过首行标题
-                            if (tr.equals(trs.first())) {
-                                // Elements tds = tr.select("td p b");
-                                continue;
-                            }
-                            Elements tdps = tr.select("td p");
-                            int[] index = {0, 1, 2, 3, 4, 5};
-                            HydrologicalInfo hydrologicalInfo = getAndFillData(tdps, index);
-                            if (null == hydrologicalInfo) continue;
-                            hydrologicalInfo.setDate(date);
-                            // hydrologicalInfoList.add(hydrologicalInfo);
-                            // 存入数据库
-                            hnswDao.insertHydrologicalInfo(hydrologicalInfo);
-                        }
+    private void doSpider(String url, LocalDate date) {
+        // 每个线程一个 sqlSession
+        SqlSession sqlSession = sqlSessionFactory.openSession(true);
+        try {
+            Document doc = Jsoup.connect(url).timeout(20000).get();
+            // 选择元素
+            Elements trs = doc.select("table tr");
+            // 遍历每一行
+            for (Element tr : trs) {
+                Elements elems;
+                int[] index;
+                if (url.contains("hnsq_BB2.asp")) {
+                    // 获取每一列
+                    elems = tr.select("td");
+                    // 对应数据元素位置索引数组
+                    index = new int[]{1, 2, 3, 4, 6, 7};
+                } else if (url.contains("zykz_BB2.asp")) {
+                    // 跳过首行标题
+                    if (tr.equals(trs.first())) {
+                        // Elements tds = tr.select("td p b");
+                        continue;
                     }
-                    fullUrl = new StringBuffer(theUrl);
-                    /*
-                    for (HydrologicalInfo hydrologicalInfo : hydrologicalInfoList) {
-                        System.out.println(hydrologicalInfo.getStationName() + hydrologicalInfo.getDate().toString());
-                    }
-                    */
-                    System.out.println(Thread.currentThread() + date.toString() + " over");
-
-                } catch (IOException | SQLException e) {
-                    e.printStackTrace();
+                    elems = tr.select("td p");
+                    index = new int[]{0, 1, 2, 3, 4, 5};
+                } else {
+                    break;
                 }
-            }
-        }
-        con.close();
+                // 获取填充
+                HydrologicalInfo hydrologicalInfo = getAndFillData(elems, index);
+                if (null == hydrologicalInfo) continue;
+                hydrologicalInfo.setDate(date);
+                // 存入数据库
+                // 获取 HnswMapper 接口
+                HnswMapper hnswMapper = sqlSession.getMapper(HnswMapper.class);
+                int result = hnswMapper.insertInfo(hydrologicalInfo);
 
+            }
+            System.out.println(Thread.currentThread() + date.toString() + " over");
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            sqlSession.close();
+        }
     }
 
     /**
@@ -150,18 +150,18 @@ public class Spider implements Runnable {
         String stationName = elems.eq(index[i++]).text().replace((char) 12288, ' ').trim();
         String tempStr = elems.eq(index[i++]).text().replace((char) 12288, ' ').trim();
         LocalTime checkTime = null;
-        if (!isStrBlank(tempStr)) {
+        if (isStrNotBlank(tempStr)) {
             checkTime = LocalTime.parse(tempStr);
         }
         tempStr = elems.eq(index[i++]).text().replace((char) 12288, ' ').replace(",", "").trim();
         Double waterLevel = null;
-        if (!isStrBlank(tempStr)) {
+        if (isStrNotBlank(tempStr)) {
             waterLevel = Double.parseDouble(tempStr);
         }
         String fluctuation = elems.eq(index[i++]).text().replace((char) 12288, ' ').trim();
         tempStr = elems.eq(index[i++]).text().replace((char) 12288, ' ').replace(",", "").trim();
         Integer flow = null;
-        if (!isStrBlank(tempStr)) {
+        if (isStrNotBlank(tempStr)) {
             flow = Integer.parseInt(tempStr);
         }
         // 填充数据
@@ -185,16 +185,14 @@ public class Spider implements Runnable {
         return null;
     }
 
-
-
     /**
-     * 检查字符串是否为空.
+     * 检查字符串是否不为空.
      *
      * @param tempStr
      * @return
      */
-    private boolean isStrBlank(String tempStr) {
-        return tempStr.equals("") || tempStr.length() <= 0;
+    private boolean isStrNotBlank(String tempStr) {
+        return tempStr != null && !tempStr.equals("") && tempStr.length() > 0;
     }
 
 }

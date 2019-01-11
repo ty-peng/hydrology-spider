@@ -2,6 +2,7 @@ package com.typeng.hydrology.model.qo;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 /**
  * @author Tianying Peng
@@ -11,66 +12,78 @@ public class HydrologicalInfoQo {
     /**
      * id
      */
-    private Integer infoId;
+    private List<Integer> infoIds;
     /**
      * 流域
      */
-    private String riverBasin;
+    private List<String> riverBasins;
     /**
      * 河名
      */
-    private String riverName;
+    private List<String> riverNames;
     /**
      * 站名
      */
-    private String stationName;
+    private List<String> stationNames;
     /**
-     * 查询日期（时间）
+     * 查询的起始日期
      */
-    private LocalDate date;
+    private LocalDate startDate;
+    /**
+     * 查询的截止日期
+     */
+    private LocalDate endDate;
     /**
      * 测量时间
      */
     private LocalTime time;
 
-    public Integer getInfoId() {
-        return infoId;
+    public List<Integer> getInfoIds() {
+        return infoIds;
     }
 
-    public void setInfoId(Integer infoId) {
-        this.infoId = infoId;
+    public void setInfoIds(List<Integer> infoIds) {
+        this.infoIds = infoIds;
     }
 
-    public String getRiverBasin() {
-        return riverBasin;
+    public List<String> getRiverBasins() {
+        return riverBasins;
     }
 
-    public void setRiverBasin(String riverBasin) {
-        this.riverBasin = riverBasin;
+    public void setRiverBasins(List<String> riverBasins) {
+        this.riverBasins = riverBasins;
     }
 
-    public String getRiverName() {
-        return riverName;
+    public List<String> getRiverNames() {
+        return riverNames;
     }
 
-    public void setRiverName(String riverName) {
-        this.riverName = riverName;
+    public void setRiverNames(List<String> riverNames) {
+        this.riverNames = riverNames;
     }
 
-    public String getStationName() {
-        return stationName;
+    public List<String> getStationNames() {
+        return stationNames;
     }
 
-    public void setStationName(String stationName) {
-        this.stationName = stationName;
+    public void setStationNames(List<String> stationNames) {
+        this.stationNames = stationNames;
     }
 
-    public LocalDate getDate() {
-        return date;
+    public LocalDate getStartDate() {
+        return startDate;
     }
 
-    public void setDate(LocalDate date) {
-        this.date = date;
+    public void setStartDate(LocalDate startDate) {
+        this.startDate = startDate;
+    }
+
+    public LocalDate getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(LocalDate endDate) {
+        this.endDate = endDate;
     }
 
     public LocalTime getTime() {

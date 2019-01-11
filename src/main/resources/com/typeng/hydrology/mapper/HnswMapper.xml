@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.typeng.hydrology.mapper.HnswMapper">
+
+    <sql id="BASE_COLUMN">
+        `info_id`, `river_basin`, `river_name`, `station_name`, `date`, `time`, `water_level`, `fluctuation`, `flow`
+    </sql>
+
+    <select id="selectById" resultType="HydrologicalInfo">
+        select
+        <include refid="BASE_COLUMN"/>
+        from hnsw
+        where `info_id`=#{infoId}
+    </select>
+
+    <select id="selectByQo" resultType="HydrologicalInfo">
+        select
+        <include refid="BASE_COLUMN"/>
+        from hnsw
+        <where>
+            <include refid="WHERE_SQL"/>
+        </where>
+        order by CONVERT(station_name USING gbk), `date` desc
+    </select>
+
+    <sql id="WHERE_SQL">
+        <if test="infoIds != null and infoIds.size() &gt; 0">
+            and `info_id` in
+            <foreach collection="infoIds" item="id" index="index" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+        </if>
+        <if test="riverBasins != null and riverBasins.size() &gt; 0">
+            and `river_basin` in
+            <foreach collection="riverBasins" item="riverBasin" index="index" open="(" close=")" separator=",">
+                #{riverBasin}
+            </foreach>
+        </if>
+        <if test="riverNames != null and riverNames.size() &gt; 0">
+            and `river_name` in
+            <foreach collection="riverNames" item="riverName" index="index" open="(" close=")" separator=",">
+                #{riverName}
+            </foreach>
+        </if>
+        <if test="stationNames != null and stationNames.size() &gt; 0">
+            and `station_name` in
+            <foreach collection="stationNames" item="stationName" index="index" open="(" close=")" separator=",">
+                #{stationName}
+            </foreach>
+        </if>
+        <if test="startDate != null">
+            and `date` between #{startDate} and
+            <if test="endDate == null">
+                (SELECT now())
+            </if>
+            <if test="endDate != null">
+                #{endDate}
+            </if>
+        </if>
+        <if test="time != null">
+            and `time`=#{time}
+        </if>
+    </sql>
+
+    <insert id="insertInfo">
+        insert into
+        hnsw
+        <include refid="INSERT_COLUMN_VALUES"/>
+    </insert>
+
+    <sql id="INSERT_COLUMN_VALUES">
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="riverBasin != null and riverBasin !=''">
+                river_basin,
+            </if>
+            <if test="riverName != null and riverName !=''">
+                river_name,
+            </if>
+            <if test="stationName != null and stationName !=''">
+                station_name,
+            </if>
+            <if test="date != null">
+                `date`,
+            </if>
+            <if test="time != null">
+                `time`,
+            </if>
+            <if test="waterLevel != null">
+                water_level,
+            </if>
+            <if test="fluctuation != null and fluctuation!=''">
+                fluctuation,
+            </if>
+            <if test="flow != null and flow &gt;= 0">
+                flow,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="riverBasin != null and riverBasin !=''">
+                #{riverBasin},
+            </if>
+            <if test="riverName != null and riverName !=''">
+                #{riverName},
+            </if>
+            <if test="stationName != null and stationName !=''">
+                #{stationName},
+            </if>
+            <if test="date != null">
+                #{date},
+            </if>
+            <if test="time != null">
+                #{time},
+            </if>
+            <if test="waterLevel != null">
+                #{waterLevel},
+            </if>
+            <if test="fluctuation != null and fluctuation!=''">
+                #{fluctuation},
+            </if>
+            <if test="flow != null and flow &gt;= 0">
+                #{flow},
+            </if>
+        </trim>
+    </sql>
+
+</mapper>

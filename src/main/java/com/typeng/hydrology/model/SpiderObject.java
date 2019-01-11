@@ -45,30 +45,6 @@ public class SpiderObject {
     public SpiderObject() {
     }
 
-    public SpiderObject(String url, RiverBasinEnum[] riverBasins, String[] stationNames, LocalDate startDate) {
-        this.url = url;
-        this.riverBasins = riverBasins;
-        this.stationNames = stationNames;
-        this.startDate = startDate;
-    }
-
-    public SpiderObject(String url, RiverBasinEnum[] riverBasins, String[] stationNames, LocalDate startDate, LocalDate endDate) {
-        this.url = url;
-        this.riverBasins = riverBasins;
-        this.stationNames = stationNames;
-        this.startDate = startDate;
-        this.endDate = endDate;
-    }
-
-    public SpiderObject(String url, RiverBasinEnum[] riverBasins, String[] stationNames, LocalDate startDate, LocalDate endDate, LocalTime[] times) {
-        this.url = url;
-        this.riverBasins = riverBasins;
-        this.stationNames = stationNames;
-        this.startDate = startDate;
-        this.endDate = endDate;
-        this.times = times;
-    }
-
     public String getUrl() {
         return url;
     }
