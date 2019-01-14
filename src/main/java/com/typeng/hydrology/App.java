@@ -19,10 +19,10 @@ public class App {
 
         int threads = 8;
         // 开始和截止日期
-        LocalDate startDate = LocalDate.of(1992, 1, 1);
+        LocalDate startDate = LocalDate.of(2019, 1, 1);
         LocalDate endDate = LocalDate.now();
         // 计算每个线程爬取的天数
-        long days = endDate.toEpochDay() - startDate.toEpochDay();
+        long days = endDate.toEpochDay() - startDate.toEpochDay() + 1;
         long intervalDays = days / threads;
         // 创建线程池
         if (threads > days) {
@@ -31,19 +31,16 @@ public class App {
         // 两个任务同时执行时记得改线程数，间隔天数和threads有关，注意其中关联
         ExecutorService pool = Executors.newFixedThreadPool(threads * 2);
         // 给每个线程分配日期段任务
-        LocalDate start = startDate;
-        LocalDate end = start.plusDays(intervalDays);
         // 类型一爬取全省页面可设置流域
         RiverBasinEnum[] riverBasins = {RiverBasinEnum.DONG_TING_HU};
-        for (int i = 0; i < threads; i++) {
-            pool.execute(new Spider(SpiderObjectUtil.getSpiderObject(SpiderType.TYPE_2, start, end, null)));
-            pool.execute(new Spider(SpiderObjectUtil.getSpiderObject(SpiderType.TYPE_1.setRiverBasins(riverBasins), start, end, null)));
-            start = end.plusDays(1);
-            if (start.plusDays(intervalDays).isAfter(LocalDate.now())) {
-                end = LocalDate.now();
+        for (LocalDate start = startDate, end; start.isBefore(endDate.plusDays(1)); start = end.plusDays(1)) {
+            if (start.plusDays(intervalDays).isAfter(endDate)) {
+                end = endDate;
             } else {
                 end = start.plusDays(intervalDays);
             }
+            pool.execute(new Spider(SpiderObjectUtil.getSpiderObject(SpiderType.TYPE_2, start, end, null)));
+            pool.execute(new Spider(SpiderObjectUtil.getSpiderObject(SpiderType.TYPE_1.setRiverBasins(riverBasins), start, end, null)));
         }
         // 销毁线程池
         pool.shutdown();

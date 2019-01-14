@@ -104,16 +104,24 @@ public class Spider implements Runnable {
                     .get();
             // 选择元素
             Elements trs = doc.select("table tr");
+            byte type;
+            if (url.contains("hnsq_BB2.asp")) {
+                type = 1;
+            } else if (url.contains("zykz_BB2.asp")) {
+                type = 2;
+            } else {
+                type = 0;
+            }
             // 遍历每一行
             for (Element tr : trs) {
                 Elements elems;
                 int[] index;
-                if (url.contains("hnsq_BB2.asp")) {
+                if (type == 1) {
                     // 获取每一列
                     elems = tr.select("td");
                     // 对应数据元素位置索引数组
                     index = new int[]{1, 2, 3, 4, 6, 7};
-                } else if (url.contains("zykz_BB2.asp")) {
+                } else if (type == 2) {
                     // 跳过首行标题
                     if (tr.equals(trs.first())) {
                         // Elements tds = tr.select("td p b");
@@ -134,7 +142,7 @@ public class Spider implements Runnable {
                 int result = hnswMapper.insertInfo(hydrologicalInfo);
 
             }
-            log.info(date.toString() + " over");
+            log.info(date.toString() + " [type" + type + "] over");
         } catch (Exception e) {
             //e.printStackTrace();
             // 输出爬取错误的记录信息
