@@ -17,7 +17,7 @@ public class App {
 
     public static void main(String[] args) throws Exception {
 
-        int threads = 16;
+        int threads = 8;
         // 开始和截止日期
         LocalDate startDate = LocalDate.of(1992, 1, 1);
         LocalDate endDate = LocalDate.now();
@@ -28,13 +28,14 @@ public class App {
         if (threads > days) {
             threads = (int) days;
         }
-        ExecutorService pool = Executors.newFixedThreadPool(threads);
+        // 两个任务同时执行时记得改线程数，间隔天数和threads有关，注意其中关联
+        ExecutorService pool = Executors.newFixedThreadPool(threads * 2);
         // 给每个线程分配日期段任务
         LocalDate start = startDate;
         LocalDate end = start.plusDays(intervalDays);
         // 类型一爬取全省页面可设置流域
         RiverBasinEnum[] riverBasins = {RiverBasinEnum.DONG_TING_HU};
-        for (int i = 0; i < threads / 2; i++) {
+        for (int i = 0; i < threads; i++) {
             pool.execute(new Spider(SpiderObjectUtil.getSpiderObject(SpiderType.TYPE_2, start, end, null)));
             pool.execute(new Spider(SpiderObjectUtil.getSpiderObject(SpiderType.TYPE_1.setRiverBasins(riverBasins), start, end, null)));
             start = end.plusDays(1);

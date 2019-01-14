@@ -100,7 +100,7 @@ public class Spider implements Runnable {
             Document doc = Jsoup.connect(url)
                     .header("User-Agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:49.0) Gecko/20100101 Firefox/49.0")
                     .header("Connection", "keep-alive")
-                    .timeout(300000)
+                    .timeout(10000)
                     .get();
             // 选择元素
             Elements trs = doc.select("table tr");
