@@ -17,9 +17,9 @@ public class App {
 
     public static void main(String[] args) throws Exception {
 
-        int threads = 8;
+        int threads = 16;
         // 开始和截止日期
-        LocalDate startDate = LocalDate.of(2019, 1, 5);
+        LocalDate startDate = LocalDate.of(1992, 1, 1);
         LocalDate endDate = LocalDate.now();
         // 计算每个线程爬取的天数
         long days = endDate.toEpochDay() - startDate.toEpochDay();
@@ -34,9 +34,9 @@ public class App {
         LocalDate end = start.plusDays(intervalDays);
         // 类型一爬取全省页面可设置流域
         RiverBasinEnum[] riverBasins = {RiverBasinEnum.DONG_TING_HU};
-        for (int i = 0; i < threads; i++) {
+        for (int i = 0; i < threads / 2; i++) {
             pool.execute(new Spider(SpiderObjectUtil.getSpiderObject(SpiderType.TYPE_2, start, end, null)));
-//            pool.execute(new Spider(SpiderObjectUtil.getSpiderObject(SpiderType.TYPE_1.setRiverBasins(riverBasins), start, end, null)));
+            pool.execute(new Spider(SpiderObjectUtil.getSpiderObject(SpiderType.TYPE_1.setRiverBasins(riverBasins), start, end, null)));
             start = end.plusDays(1);
             if (start.plusDays(intervalDays).isAfter(LocalDate.now())) {
                 end = LocalDate.now();

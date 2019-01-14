@@ -8,6 +8,7 @@ import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
+import org.apache.log4j.Logger;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -25,6 +26,8 @@ import java.time.LocalTime;
  * @date 2018-12-24 21:32
  */
 public class Spider implements Runnable {
+
+    private static final Logger log = Logger.getLogger("spiderLogger");
 
     // 应用唯一
     private static SqlSessionFactory sqlSessionFactory;
@@ -94,7 +97,11 @@ public class Spider implements Runnable {
         // 每个线程一个 sqlSession
         SqlSession sqlSession = sqlSessionFactory.openSession(true);
         try {
-            Document doc = Jsoup.connect(url).timeout(20000).get();
+            Document doc = Jsoup.connect(url)
+                    .header("User-Agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:49.0) Gecko/20100101 Firefox/49.0")
+                    .header("Connection", "keep-alive")
+                    .timeout(300000)
+                    .get();
             // 选择元素
             Elements trs = doc.select("table tr");
             // 遍历每一行
@@ -127,9 +134,12 @@ public class Spider implements Runnable {
                 int result = hnswMapper.insertInfo(hydrologicalInfo);
 
             }
-            System.out.println(Thread.currentThread() + date.toString() + " over");
+            log.info(date.toString() + " over");
         } catch (Exception e) {
-            e.printStackTrace();
+            //e.printStackTrace();
+            // 输出爬取错误的记录信息
+            log.error("retry " + date.toString() + " [" + e.getMessage() + "] url: " + url);
+            doSpider(url, date);
         } finally {
             sqlSession.close();
         }
